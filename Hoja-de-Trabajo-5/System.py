@@ -92,4 +92,19 @@ def generateProcesses(env, cpu, ram_memory, interval):
 #SIMULACION
 env = simpy.Environment()
 cpu = CPU(env, 1)
-ram_memory = simpy.Container(env, init=RAM_MEMORY )
+ram_memory = simpy.Container(env, init=RAM_MEMORY)
+#25 procesos
+env.process(generateProcesses(env, cpu, ram_memory, 0.4))
+env.run(until=100)
+#50 procesos
+env.process(generateProcesses(env, cpu, ram_memory, 0.2))
+env.run(until=100)
+#100 procesos
+env.process(generateProcesses(env, cpu, ram_memory, 0.1))
+env.run(until=300)
+#150 procesos
+env.process(generateProcesses(env, cpu, ram_memory, 0.0666))
+env.run(until=300)
+#200 procesos
+env.process(generateProcesses(env, cpu, ram_memory, 0.05))
+env.run(until=300)
