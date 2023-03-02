@@ -92,4 +92,4 @@ def generateProcesses(env, cpu, ram_memory, interval):
 #SIMULACION
 env = simpy.Environment()
 cpu = CPU(env, 1)
-ram_memory = simpy.Container(env, init=RAM)
+ram_memory = simpy.Container(env, init=RAM_MEMORY )
