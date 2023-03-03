@@ -24,13 +24,11 @@ class Process:
         self.timeBeginning=0
         self.timeEnd=0
         self.wait=False
-
     def __repr__(self):
         return self.name
-    
     def runProgram(self):
         while self.instructionLeft > 0:
-            with self.cpu.request() as request:
+            with self.cpu.cpu.request() as request:
                 self.state="READY"
                 yield request
                 self.state="RUNNING"
@@ -46,25 +44,21 @@ class Process:
                     self.state="READY"
                 elif random.randint(1, 21)==2:
                     self.state="READY"
-    
     def finishProcess(self):
         self.state="TERMINATED"
         self.timeEnd=self.env.now
         totalTime=self.timeEnd - self.timeBeginning
         print(f"{self.name} finalizó a las {totalTime:.2f} unidades de tiempo")
         self.releaseMemory()
-
     def requireMemory(self):
         self.state="...WAITING FOR MEMORY..."
         yield self.ram_memory.get(self.requiredMem)
         self.state="READY"
         self.queueTime=self.env.now-self.timeBeginning
         print(f"{self.env.now:.2f}: {self.name} recibió {self.requiredMem} de memoria RAM")
-    
     def releaseMemory(self):
         yield self.ram_memory.put(self.requiredMem)
         print(f"{self.env.now:.2f}: {self.name} liberó {self.requiredMem} de memoria RAM")
-
     def startProcess(self):
         self.timeBeginning=self.env.now
         print(f"{self.env.now:.2f}: {self.name} entró al sistema con una memoria de {self.requiredMem}.")
@@ -77,34 +71,63 @@ class CPU:
         self.env=env
         self.cpu=simpy.Resource(env, capacity=num_cpus)
         self.num_cpus=num_cpus
-    
     def run(self, process):
         self.env.process(process.startProcess())
 
-def generateProcesses(env, cpu, ram_memory, interval):
+def generateProcesses(env, cpu, ram_memory, interval, process_dict):
     i=0
     while True:
         i+=1
         process=Process(env, f"Proceso {i}", cpu, ram_memory)
+        process_dict[process.name] = {"state": process.state, "queueTime": process.queueTime}
         env.process(process.runProgram())
         yield env.timeout(interval)
+
 
 #SIMULACION
 env = simpy.Environment()
 cpu = CPU(env, 1)
 ram_memory = simpy.Container(env, init=RAM_MEMORY)
-#25 procesos
-env.process(generateProcesses(env, cpu, ram_memory, 0.4))
+process_dict = {}
+
+# 25 procesos
+print("-25 PROCESOS-")
+process_dict = {}
+env.process(generateProcesses(env, cpu, ram_memory, 0.4, process_dict))
+env.run(until=50)
+
+# 50 procesos
+print("-50 PROCESOS-")
+env = simpy.Environment()
+cpu = CPU(env, 1)
+ram_memory = simpy.Container(env, init=RAM_MEMORY)
+process_dict = {}
+env.process(generateProcesses(env, cpu, ram_memory, 0.2, process_dict))
 env.run(until=100)
-#50 procesos
-env.process(generateProcesses(env, cpu, ram_memory, 0.2))
-env.run(until=100)
-#100 procesos
-env.process(generateProcesses(env, cpu, ram_memory, 0.1))
+
+# 100 procesos
+print("-100 PROCESOS-")
+env = simpy.Environment()
+cpu = CPU(env, 1)
+ram_memory = simpy.Container(env, init=RAM_MEMORY)
+process_dict = {}
+env.process(generateProcesses(env, cpu, ram_memory, 0.1, process_dict))
+env.run(until=200)
+
+# 150 procesos
+print("-150 PROCESOS-")
+env = simpy.Environment()
+cpu = CPU(env, 1)
+ram_memory = simpy.Container(env, init=RAM_MEMORY)
+process_dict = {}
+env.process(generateProcesses(env, cpu, ram_memory, 0.0666, process_dict))
 env.run(until=300)
-#150 procesos
-env.process(generateProcesses(env, cpu, ram_memory, 0.0666))
-env.run(until=300)
-#200 procesos
-env.process(generateProcesses(env, cpu, ram_memory, 0.05))
-env.run(until=300)
+
+# 200 procesos
+print("-200 PROCESOS-")
+env = simpy.Environment()
+cpu = CPU(env, 1)
+ram_memory = simpy.Container(env, init=RAM_MEMORY)
+process_dict = {}
+env.process(generateProcesses(env, cpu, ram_memory, 0.05, process_dict))
+env.run(until=400)
